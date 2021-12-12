@@ -1,5 +1,5 @@
 ##
-_common_job_if: &common_job_if  ${{ ( github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '#build') || (github.ref  == 'refs/heads/main') || (github.ref  == 'refs/heads/master')) && !contains(github.event.head_commit.message, '#skip-build') }}
+# _common_job_if: &common_job_if  ${{ ( github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '#build') || (github.ref  == 'refs/heads/main') || (github.ref  == 'refs/heads/master')) && !contains(github.event.head_commit.message, '#skip-build') }}
 ##
 name: Linux Build
 on:
@@ -17,7 +17,7 @@ on:
 
 jobs:
   set_version:
-    if: *common_job_if
+    if: ${{ ( github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '#build') || (github.ref  == 'refs/heads/main') || (github.ref  == 'refs/heads/master')) && !contains(github.event.head_commit.message, '#skip-build') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -41,7 +41,7 @@ jobs:
         echo "gitversion=${GITVERSION}" | tee -a $GITHUB_ENV
 
   build_linux:
-    if: *common_job_if
+    if: ${{ ( github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '#build') || (github.ref  == 'refs/heads/main') || (github.ref  == 'refs/heads/master')) && !contains(github.event.head_commit.message, '#skip-build') }}
     needs: set_version
     runs-on: ubuntu-latest
     steps:
@@ -64,7 +64,7 @@ jobs:
     #     pyinstaller --onefile getos.py
 
   build_windows:
-    if: *common_job_if
+    if: ${{ ( github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '#build') || (github.ref  == 'refs/heads/main') || (github.ref  == 'refs/heads/master')) && !contains(github.event.head_commit.message, '#skip-build') }}
     needs: set_version
     runs-on: windows-latest
     steps:
@@ -78,7 +78,7 @@ jobs:
         echo "arctifact_windows=${{steps.build-pyinstaller.outputs.artifact_name}}" | tee -a $GITHUB_ENV
 
   release_artifacts:
-    if: *common_job_if
+    if: ${{ ( github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '#build') || (github.ref  == 'refs/heads/main') || (github.ref  == 'refs/heads/master')) && !contains(github.event.head_commit.message, '#skip-build') }}
     needs: ["set_version", "build_linux", "build_windows"]
     steps:
     - name: download artifacts
