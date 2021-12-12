@@ -1,10 +1,12 @@
 name: build-pyinstaller
 description: build-pyinstaller
 inputs:
-  name: 
-    description: 'Operating system'
+  sourcename: 
+    description: 'source file to build'
     required: true
-    default: getos   
+  distname:
+    description: 'dist file to save'
+    required: true  
   os:  # id of input
     description: 'Operating system'
     required: true
@@ -14,7 +16,10 @@ outputs:
   artifact_name:
     description: "Artifact Name"
     value: ${{ steps.set-names.outputs.artifact_name }}
-
+  artifact_file:
+    description: "Artifact File"
+    value: ${{ steps.set-names.outputs.artifact_file }}
+    
 runs:
   using: "composite"
   steps:
@@ -25,20 +30,25 @@ runs:
       shell: bash
       run: |
         pip install pyinstaller
-        pyinstaller --onefile getos.py
+        pyinstaller --onefile ${{ inputs.sourcename }} -n ${{ inputs.distname }}
+        ls -l dist/
+        
 
     - name: set-names
       id: set-names
       shell: bash
       run: |
-        ARTIFACT_NAME=${{inputs.name}}-${{ inputs.os }}-${{ inputs.version }}
+        ARTIFACT_NAME=${{ inputs.version }}-${{ inputs.os }}
         echo "artifact_name=${ARTIFACT_NAME}" | tee -a $GITHUB_ENV
         echo "::set-output name=artifact_name::${ARTIFACT_NAME}"
+        ARTIFACT_FILE="$(basename dist/${{ inputs.distname }} | sed 's/\(.*\)\..*/\1/')".zip
+        echo "artifact_file=${ARTIFACT_FILE}" | tee -a $GITHUB_ENV
+        zip ${ARTIFACT_FILE} dist/${{ inputs.distname }}
     
     - name: upload artifacts
       uses: actions/upload-artifact@v2
       with:
         name: ${{ env.artifact_name }}
         path: |
-          dist/getos
+          ${{ env.artifact_file }}
         retention-days: 1

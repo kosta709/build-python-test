@@ -38,6 +38,7 @@ jobs:
     - name: set version
       run: |
         GITVERSION=${{ steps.gitversion.outputs.fullSemVer }}
+        echo "::set-output name=gitversion::${GITVERSION}"
         echo "gitversion=${GITVERSION}" | tee -a $GITHUB_ENV
 
   build_linux:
@@ -50,19 +51,13 @@ jobs:
       id: build-pyinstaller
       uses: ./.github/actions/build-pyinstaller
       with:
-        name: getos
+        sourcename: getos.py
+        distname: getos
         os: linux
-        version: ${{ env.gitversion }}
+        version: ${{ needs.set_version.outputs.gitversion }}
 
     - run: |
-        echo "arctifact_linux=${{steps.build-pyinstaller.outputs.artifact_name}}" | tee -a $GITHUB_ENV
-
-    # - name: python build
-    #   env:
-    #     VERSION: ${{ env.gitversion }}
-    #   run: |
-    #     pip install pyinstaller
-    #     pyinstaller --onefile getos.py
+        echo "::set-output name=artifact_path::${{steps.build-pyinstaller.outputs.artifact_name}}/${{steps.build-pyinstaller.outputs.artifact_file}}"
 
   build_windows:
     if: ${{ ( github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '#build') || (github.ref  == 'refs/heads/main') || (github.ref  == 'refs/heads/master')) && !contains(github.event.head_commit.message, '#skip-build') }}
@@ -73,12 +68,14 @@ jobs:
     - name: build-pyinstaller
       uses: ./.github/actions/build-pyinstaller
       with:
-        name: getos
+        sourcename: getos.py
+        distname: getos.exe
         os: windows
-        version: ${{ env.gitversion }}
+        version: ${{ needs.set_version.outputs.gitversion }}
+    
     - shell: bash
       run: |
-        echo "arctifact_windows=${{steps.build-pyinstaller.outputs.artifact_name}}" | tee -a $GITHUB_ENV
+        echo "::set-output name=artifact_path::${{steps.build-pyinstaller.outputs.artifact_name}}/${{steps.build-pyinstaller.outputs.artifact_file}}"
 
   release_artifacts:
     if: ${{ ( github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '#build') || (github.ref  == 'refs/heads/main') || (github.ref  == 'refs/heads/master')) && !contains(github.event.head_commit.message, '#skip-build') }}
@@ -100,8 +97,8 @@ jobs:
       with:
         tag_name: ${{ env.gitversion }}
         files: |
-          ${{steps.download-artifacts.outputs.download-path}}/${{env.arctifact_linux}}/getos
-          ${{steps.download-artifacts.outputs.download-path}}/${{env.arctifact_windows}}/getos
+          ${{steps.download-artifacts.outputs.download-path}}/${{needs.build_linux.output.arctifact_path}}
+          ${{steps.download-artifacts.outputs.download-path}}/${{needs.build_windows.output.arctifact_path}
 
     - name: commit-tag-build
       env:
