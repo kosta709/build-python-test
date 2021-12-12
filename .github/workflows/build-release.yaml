@@ -98,7 +98,7 @@ jobs:
         tag_name: ${{ env.gitversion }}
         files: |
           ${{steps.download-artifacts.outputs.download-path}}/${{needs.build_linux.output.arctifact_path}}
-          ${{steps.download-artifacts.outputs.download-path}}/${{needs.build_windows.output.arctifact_path}
+          ${{steps.download-artifacts.outputs.download-path}}/${{needs.build_windows.output.arctifact_path}}
 
     - name: commit-tag-build
       env:
