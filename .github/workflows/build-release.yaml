@@ -1,0 +1,109 @@
+##
+_common_job_if: &common_job_if  ${{ ( github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '#build') || (github.ref  == 'refs/heads/main') || (github.ref  == 'refs/heads/master')) && !contains(github.event.head_commit.message, '#skip-build') }}
+##
+name: Linux Build
+on:
+  workflow_dispatch:
+    inputs:    
+      increaseVersion:
+        description: 'increase version - yes/no' 
+        default: "yes"
+      # deployTo:
+      #   description: 'comma separated list of envs to deploy'
+  push:
+    branches: ['*']
+    tags-ignore:
+    - build-*
+
+jobs:
+  set_version:
+    if: *common_job_if
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout the repo
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v0.9.11
+      with:
+        versionSpec: '5.8.1'
+
+    - name: Determine Version
+      id: gitversion
+      uses: gittools/actions/gitversion/execute@v0.9.11
+
+    - name: set version
+      run: |
+        GITVERSION=${{ steps.gitversion.outputs.fullSemVer }}
+        echo "gitversion=${GITVERSION}" | tee -a $GITHUB_ENV
+
+  build_linux:
+    if: *common_job_if
+    needs: set_version
+    runs-on: ubuntu-latest
+    steps:
+    - name: build-pyinstaller
+      id: build-pyinstaller
+      uses: ./.github/actions/build-pyinstaller
+      with:
+        name: getos
+        os: linux
+        version: ${{ env.gitversion }}
+
+    - run: |
+        echo "arctifact_linux=${{steps.build-pyinstaller.outputs.artifact_name}}" | tee -a $GITHUB_ENV
+
+    # - name: python build
+    #   env:
+    #     VERSION: ${{ env.gitversion }}
+    #   run: |
+    #     pip install pyinstaller
+    #     pyinstaller --onefile getos.py
+
+  build_windows:
+    if: *common_job_if
+    needs: set_version
+    runs-on: windows-latest
+    steps:
+    - name: build-pyinstaller
+      uses: ./.github/actions/build-pyinstaller
+      with:
+        name: getos
+        os: windows
+        version: ${{ env.gitversion }}
+    - run: |
+        echo "arctifact_windows=${{steps.build-pyinstaller.outputs.artifact_name}}" | tee -a $GITHUB_ENV
+
+  release_artifacts:
+    if: *common_job_if
+    needs: ["set_version", "build_linux", "build_windows"]
+    steps:
+    - name: download artifacts
+      id: download-artifacts
+      uses: actions/download-artifact@v2
+      with:
+        path: artifacts
+    
+    - name: Display structure of downloaded files
+      run: ls -R ${{steps.download-artifacts.outputs.download-path}}
+    
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      # if: startsWith(github.ref, 'refs/tags/')
+      with:
+        tag_name: ${{ env.gitversion }}
+        files: |
+          ${{steps.download-artifacts.outputs.download-path}}/${{env.arctifact_linux}}/getos
+          ${{steps.download-artifacts.outputs.download-path}}/${{env.arctifact_windows}}/getos
+
+    - name: commit-tag-build
+      env:
+        TAG: ${{ env.gitversion }}
+      run: |
+        git config user.name "GitHub Actions Bot"
+        git config user.email "<>"
+        git tag "${TAG}" || true
+        git push --tags

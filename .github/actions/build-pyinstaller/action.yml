@@ -1,0 +1,44 @@
+name: build-pyinstaller
+description: build-pyinstaller
+inputs:
+  name: 
+    description: 'Operating system'
+    required: true
+    default: getos   
+  os:  # id of input
+    description: 'Operating system'
+    required: true
+  version:  # id of input
+    required: true
+outputs:
+  artifact_name:
+    description: "Artifact Name"
+    value: ${{ steps.set-names.outputs.artifact_name }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout the repo
+      uses: actions/checkout@v2
+
+    - name: python build
+      shell: bash
+      run: |
+        pip install pyinstaller
+        pyinstaller --onefile getos.py
+
+    - name: set-names
+      id: set-names
+      shell: bash
+      run: |
+        ARTIFACT_NAME=${{inputs.name}}-${{ inputs.os }}-${{ inputs.version }}
+        echo "artifact_name=${ARTIFACT_NAME}" | tee -a $GITHUB_ENV
+        echo "::set-output name=artifact_name::${ARTIFACT_NAME}"
+    
+    - name: upload artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ env.artifact_name }}
+        path: |
+          dist/getos
+        retention-days: 1
