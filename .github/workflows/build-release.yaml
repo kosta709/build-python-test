@@ -45,6 +45,7 @@ jobs:
     needs: set_version
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v2
     - name: build-pyinstaller
       id: build-pyinstaller
       uses: ./.github/actions/build-pyinstaller
@@ -68,6 +69,7 @@ jobs:
     needs: set_version
     runs-on: windows-latest
     steps:
+    - uses: actions/checkout@v2
     - name: build-pyinstaller
       uses: ./.github/actions/build-pyinstaller
       with:
