@@ -6,7 +6,7 @@ https://pyinstaller.readthedocs.io/en/stable/
 ```
 virtualenv .pyenv
 source .pyenv/bin/activate
-pip install -r requerements.txt
+pip install -r requirements.txt
 ```
 ## Build Manually
 ```
