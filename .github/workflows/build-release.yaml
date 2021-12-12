@@ -74,12 +74,14 @@ jobs:
         name: getos
         os: windows
         version: ${{ env.gitversion }}
-    - run: |
+    - shell: bash
+      run: |
         echo "arctifact_windows=${{steps.build-pyinstaller.outputs.artifact_name}}" | tee -a $GITHUB_ENV
 
   release_artifacts:
     if: ${{ ( github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '#build') || (github.ref  == 'refs/heads/main') || (github.ref  == 'refs/heads/master')) && !contains(github.event.head_commit.message, '#skip-build') }}
     needs: ["set_version", "build_linux", "build_windows"]
+    runs-on: ubuntu-latest
     steps:
     - name: download artifacts
       id: download-artifacts
