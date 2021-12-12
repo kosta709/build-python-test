@@ -38,8 +38,6 @@ jobs:
     - name: Determine Version
       id: gitversion
       uses: gittools/actions/gitversion/execute@v0.9.11
-      with:
-        targetPath: ${{ env.git_repo_name }}
 
     - name: set version
       run: |
