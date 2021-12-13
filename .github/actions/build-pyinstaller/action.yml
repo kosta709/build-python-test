@@ -46,7 +46,13 @@ runs:
         ARTIFACT_FILE="$(basename dist/${{ inputs.distname }} | sed 's/\(.*\)\..*/\1/')".zip
         echo "artifact_file=${ARTIFACT_FILE}" | tee -a $GITHUB_ENV
         echo "::set-output name=artifact-file::${ARTIFACT_FILE}"
-        zip ${ARTIFACT_FILE} dist/${{ inputs.distname }}
+        if command -v powershell; then
+          echo "Archiving by powershell"
+          powershell Compress-Archive -Path ${ARTIFACT_FILE} -DestinationPath dist/${{ inputs.distname }}
+        else
+          echo "Archiving by zip"
+          zip -v ${ARTIFACT_FILE} dist/${{ inputs.distname }}
+        fi
     
     - name: upload artifacts
       uses: actions/upload-artifact@v2
