@@ -96,14 +96,14 @@ jobs:
       uses: softprops/action-gh-release@v1
       # if: startsWith(github.ref, 'refs/tags/')
       with:
-        tag_name: ${{ env.gitversion }}
+        tag_name: ${{ needs.set_version.outputs.gitversion }}
         files: |
           ${{steps.download-artifacts.outputs.download-path}}/${{needs.build_linux.output.arctifact-path}}
           ${{steps.download-artifacts.outputs.download-path}}/${{needs.build_windows.output.arctifact-path}}
 
     - name: commit-tag-build
       env:
-        TAG: ${{ env.gitversion }}
+        TAG: ${{ needs.set_version.outputs.gitversion }}
       run: |
         git config user.name "GitHub Actions Bot"
         git config user.email "<>"
