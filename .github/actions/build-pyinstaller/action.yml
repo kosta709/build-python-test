@@ -31,7 +31,7 @@ runs:
     - name: python build
       shell: bash
       run: |
-        pip install pyinstaller
+        pip3 install pyinstaller
         pyinstaller --onefile ${{ inputs.sourcename }} -n ${{ inputs.distname }}
         ls -l dist/
         
