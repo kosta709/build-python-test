@@ -71,6 +71,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: build-pyinstaller
+      id: build-pyinstaller
       uses: ./.github/actions/build-pyinstaller
       with:
         sourcename: getos.py
@@ -90,7 +91,7 @@ jobs:
         path: artifacts
     
     - name: Display structure of downloaded files
-      run: ls -R ${{steps.download-artifacts.outputs.download-path}}
+      run: ls -lR ${{steps.download-artifacts.outputs.download-path}}
     
     - name: Release
       uses: softprops/action-gh-release@v1
@@ -98,14 +99,5 @@ jobs:
       with:
         tag_name: ${{ needs.set_version.outputs.gitversion }}
         files: |
-          ${{steps.download-artifacts.outputs.download-path}}/${{needs.build_linux.output.arctifact-path}}
-          ${{steps.download-artifacts.outputs.download-path}}/${{needs.build_windows.output.arctifact-path}}
-
-    - name: commit-tag-build
-      env:
-        TAG: ${{ needs.set_version.outputs.gitversion }}
-      run: |
-        git config user.name "GitHub Actions Bot"
-        git config user.email "<>"
-        git tag "${TAG}" || true
-        git push --tags
+          ${{steps.download-artifacts.outputs.download-path}}/${{needs.build_linux.output.artifact-path}}
+          ${{steps.download-artifacts.outputs.download-path}}/${{needs.build_windows.output.artifact-path}}
