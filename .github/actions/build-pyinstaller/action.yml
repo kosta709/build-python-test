@@ -48,7 +48,7 @@ runs:
         echo "::set-output name=artifact-file::${ARTIFACT_FILE}"
         if command -v powershell; then
           echo "Archiving by powershell"
-          powershell Compress-Archive -Path ${ARTIFACT_FILE} -DestinationPath dist/${{ inputs.distname }}
+          powershell Compress-Archive -Path dist/${{ inputs.distname }} -DestinationPath ${ARTIFACT_FILE}
         else
           echo "Archiving by zip"
           zip -v ${ARTIFACT_FILE} dist/${{ inputs.distname }}
