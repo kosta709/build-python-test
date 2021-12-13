@@ -99,5 +99,5 @@ jobs:
       with:
         tag_name: ${{ needs.set_version.outputs.gitversion }}
         files: |
-          ${{steps.download-artifacts.outputs.download-path}}/${{needs.build_linux.output.artifact-path}}
-          ${{steps.download-artifacts.outputs.download-path}}/${{needs.build_windows.output.artifact-path}}
+          ${{steps.download-artifacts.outputs.download-path}}/${{needs.build_linux.outputs.artifact-path}}
+          ${{steps.download-artifacts.outputs.download-path}}/${{needs.build_windows.outputs.artifact-path}}
