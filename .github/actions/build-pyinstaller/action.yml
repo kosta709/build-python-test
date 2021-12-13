@@ -46,7 +46,7 @@ runs:
         ARTIFACT_FILE="$(basename dist/${{ inputs.distname }} | sed 's/\(.*\)\..*/\1/')"-${{ inputs.version }}-${{ inputs.os }}.zip
         echo "artifact_file=${ARTIFACT_FILE}" | tee -a $GITHUB_ENV
         echo "::set-output name=artifact-file::${ARTIFACT_FILE}"
-        if command -v powershell; then
+        if [[ "${{ inputs.os }}" == "windows" ]]; then
           echo "Archiving by powershell"
           powershell Compress-Archive -Path dist/${{ inputs.distname }} -DestinationPath ${ARTIFACT_FILE}
         else
