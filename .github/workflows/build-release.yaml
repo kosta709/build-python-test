@@ -20,6 +20,9 @@ jobs:
     if: ${{ ( github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '#build') || (github.ref  == 'refs/heads/main') || (github.ref  == 'refs/heads/master')) && !contains(github.event.head_commit.message, '#skip-build') }}
     runs-on: ubuntu-latest
 
+    outputs:
+      gitversion: ${{ steps.set-version.outputs.gitversion }}
+
     steps:
     - name: Checkout the repo
       uses: actions/checkout@v2
@@ -36,6 +39,7 @@ jobs:
       uses: gittools/actions/gitversion/execute@v0.9.11
 
     - name: set version
+      id: set-version
       run: |
         GITVERSION=${{ steps.gitversion.outputs.fullSemVer }}
         echo "::set-output name=gitversion::${GITVERSION}"
@@ -45,6 +49,8 @@ jobs:
     if: ${{ ( github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '#build') || (github.ref  == 'refs/heads/main') || (github.ref  == 'refs/heads/master')) && !contains(github.event.head_commit.message, '#skip-build') }}
     needs: set_version
     runs-on: ubuntu-latest
+    outputs:
+      artifact-path: ${{steps.build-pyinstaller.outputs.artifact-path}}
     steps:
     - uses: actions/checkout@v2
     - name: build-pyinstaller
@@ -54,15 +60,14 @@ jobs:
         sourcename: getos.py
         distname: getos
         os: linux
-        version: ${{ needs.set_version.outputs.gitversion }}
-
-    - run: |
-        echo "::set-output name=artifact_path::${{steps.build-pyinstaller.outputs.artifact_name}}/${{steps.build-pyinstaller.outputs.artifact_file}}"
+        version: "${{ needs.set_version.outputs.gitversion }}"
 
   build_windows:
     if: ${{ ( github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '#build') || (github.ref  == 'refs/heads/main') || (github.ref  == 'refs/heads/master')) && !contains(github.event.head_commit.message, '#skip-build') }}
     needs: set_version
     runs-on: windows-latest
+    outputs:
+      artifact-path: ${{ steps.build-pyinstaller.outputs.artifact-path}}
     steps:
     - uses: actions/checkout@v2
     - name: build-pyinstaller
@@ -72,10 +77,6 @@ jobs:
         distname: getos.exe
         os: windows
         version: ${{ needs.set_version.outputs.gitversion }}
-    
-    - shell: bash
-      run: |
-        echo "::set-output name=artifact_path::${{steps.build-pyinstaller.outputs.artifact_name}}/${{steps.build-pyinstaller.outputs.artifact_file}}"
 
   release_artifacts:
     if: ${{ ( github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '#build') || (github.ref  == 'refs/heads/main') || (github.ref  == 'refs/heads/master')) && !contains(github.event.head_commit.message, '#skip-build') }}
@@ -97,8 +98,8 @@ jobs:
       with:
         tag_name: ${{ env.gitversion }}
         files: |
-          ${{steps.download-artifacts.outputs.download-path}}/${{needs.build_linux.output.arctifact_path}}
-          ${{steps.download-artifacts.outputs.download-path}}/${{needs.build_windows.output.arctifact_path}}
+          ${{steps.download-artifacts.outputs.download-path}}/${{needs.build_linux.output.arctifact-path}}
+          ${{steps.download-artifacts.outputs.download-path}}/${{needs.build_windows.output.arctifact-path}}
 
     - name: commit-tag-build
       env:
